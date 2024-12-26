@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    environment {
+        SNOWFLAKE_CONFIG = 'configs/snowflake_connection.properties'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/manjunathbabur/snowflake-cicd.git'
+            }
+        }
+
+        stage('Validate SQL Scripts') {
+            steps {
+                echo 'Validating SQL scripts...'
+                sh '''
+                for file in scripts/*.sql; do
+                    echo "Validating $file"
+                    # Example validation logic can be added here
+                done
+                '''
+            }
+        }
+
+        stage('Execute SQL Scripts') {
+            steps {
+                echo 'Executing SQL scripts on Snowflake...'
+                sh '''
+                for file in scripts/*.sql; do
+                    echo "Executing $file on Snowflake"
+                    snowsql -c ${SNOWFLAKE_CONFIG} -f $file
+                done
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+    }
+}
